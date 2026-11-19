@@ -1,4 +1,3 @@
-
 name: ZewarSnap Android APK
 
 on:
@@ -25,11 +24,10 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: stable
+          flutter-version: '3.35.7'
 
       - name: Extract Project
-        run: |
-          unzip -q ZewarSnap_Source_Project.zip -d source
+        run: unzip -q ZewarSnap_Source_Project.zip -d source
 
       - name: Install Dependencies
         working-directory: source/ZewarSnap
@@ -37,7 +35,7 @@ jobs:
 
       - name: Build APK
         working-directory: source/ZewarSnap
-        run: flutter build apk --release --android-skip-build-dependency-validation
+        run: flutter build apk --release
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
