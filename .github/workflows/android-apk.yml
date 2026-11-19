@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
       - name: Setup Java
@@ -26,15 +26,45 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.35.7'
+          channel: stable
 
       - name: Extract Project
-        run: unzip -q ZewarSnap_Source_Project_FIXED.zip -d source
+        run: |
+          unzip -q ZewarSnap_Source_Project_FIXED.zip -d source
+          ls -la source/ZewarSnap
 
       - name: Install Dependencies
         working-directory: source/ZewarSnap
         run: flutter pub get
 
-      - name: Build APK
+      - name: Configure Release Signing
+        working-directory: source/ZewarSnap
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p = Path("android/app/build.gradle")
+          s = p.read_text()
+
+          if "signingConfig signingConfigs.debug" not in s:
+              marker = "buildTypes {"
+              if marker not in s:
+                  raise SystemExit("buildTypes block not found")
+              pos = s.index(marker)
+              end = s.index("\n    }", pos)
+              block = s[pos:end]
+              if "release {" not in block:
+                  raise SystemExit("release block not found")
+              block = block.replace(
+                  "release {",
+                  "release {\n            signingConfig signingConfigs.debug",
+                  1
+              )
+              s = s[:pos] + block + s[end:]
+              p.write_text(s)
+          PY
+
+      - name: Build Release APK
         working-directory: source/ZewarSnap
         run: flutter build apk --release
 
@@ -49,4 +79,5 @@ jobs:
         with:
           name: ZewarSnap-APK
           path: source/ZewarSnap/build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
           
