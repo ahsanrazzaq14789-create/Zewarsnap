@@ -27,7 +27,8 @@ jobs:
           flutter-version: '3.35.7'
 
       - name: Extract Project
-        run: unzip -q ZewarSnap_Source_Project.zip -d source
+        run: unzip -q 
+        ZewarSnap_Source_Project_FIXED.zip -d source
 
       - name: Install Dependencies
         working-directory: source/ZewarSnap
