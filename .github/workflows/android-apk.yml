@@ -30,20 +30,13 @@ jobs:
 
       - name: Check Source ZIP
         run: |
-          test -f ZewarSnap_Source_Project_FIXED.zip || {
-            echo "ERROR: Source ZIP not found"
-            exit 1
-          }
+          test -f ZewarSnap_Source_Project_FIXED.zip || exit 1
 
       - name: Extract Project
         run: |
           mkdir -p source
           unzip -q ZewarSnap_Source_Project_FIXED.zip -d source
-          test -f source/ZewarSnap/pubspec.yaml || {
-            echo "ERROR: Flutter project not found"
-            find source -name pubspec.yaml
-            exit 1
-          }
+          test -f source/ZewarSnap/pubspec.yaml
 
       - name: Install Dependencies
         working-directory: source/ZewarSnap
@@ -56,14 +49,8 @@ jobs:
       - name: Verify APK Exists
         run: |
           APK="source/ZewarSnap/build/app/outputs/flutter-apk/app-release.apk"
-          test -f "$APK" || {
-            echo "ERROR: APK was not generated"
-            exit 1
-          }
+          test -f "$APK" || exit 1
           ls -lh "$APK"
-
-      - name: Verify APK Signature
-        
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
