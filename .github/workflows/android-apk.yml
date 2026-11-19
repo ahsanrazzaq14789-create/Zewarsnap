@@ -1,10 +1,11 @@
+
 name: ZewarSnap Android APK
 
 on:
   workflow_dispatch:
   push:
     paths:
-      - 'ZewarSnap_Source_Project.zip'
+      - 'ZewarSnap_Source_Project_FIXED.zip'
       - '.github/workflows/android-apk.yml'
 
 jobs:
@@ -27,7 +28,7 @@ jobs:
           flutter-version: '3.35.7'
 
       - name: Extract Project
-        run: unzip -q  ZewarSnap_Source_Project_FIXED.zip -d source
+        run: unzip -q ZewarSnap_Source_Project_FIXED.zip -d source
 
       - name: Install Dependencies
         working-directory: source/ZewarSnap
@@ -36,6 +37,12 @@ jobs:
       - name: Build APK
         working-directory: source/ZewarSnap
         run: flutter build apk --release
+
+      - name: Verify APK Signature
+        run: |
+          APK="source/ZewarSnap/build/app/outputs/flutter-apk/app-release.apk"
+          APKSIGNER=$(find "$ANDROID_HOME/build-tools" -name apksigner | sort -V | tail -n 1)
+          "$APKSIGNER" verify --verbose --print-certs "$APK"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
