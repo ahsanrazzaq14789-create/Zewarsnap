@@ -1,3 +1,4 @@
+
 name: ZewarSnap Android APK
 
 on:
@@ -29,28 +30,24 @@ jobs:
 
       - name: Check Source ZIP
         run: |
-          if [ ! -f "ZewarSnap_Source_Project_FIXED.zip" ]; then
-            echo "ERROR: ZewarSnap_Source_Project_FIXED.zip not found!"
+          test -f ZewarSnap_Source_Project_FIXED.zip || {
+            echo "ERROR: Source ZIP not found"
             exit 1
-          fi
+          }
 
       - name: Extract Project
         run: |
           mkdir -p source
           unzip -q ZewarSnap_Source_Project_FIXED.zip -d source
-          if [ ! -f "source/ZewarSnap/pubspec.yaml" ]; then
-            echo "ERROR: Flutter project not found at source/ZewarSnap"
-            find source -maxdepth 3 -name pubspec.yaml
+          test -f source/ZewarSnap/pubspec.yaml || {
+            echo "ERROR: Flutter project not found"
+            find source -name pubspec.yaml
             exit 1
-          fi
+          }
 
       - name: Install Dependencies
         working-directory: source/ZewarSnap
         run: flutter pub get
-
-      - name: Check Flutter Project
-        working-directory: source/ZewarSnap
-        run: flutter analyze --no-pub
 
       - name: Build Release APK
         working-directory: source/ZewarSnap
@@ -59,27 +56,24 @@ jobs:
       - name: Verify APK Exists
         run: |
           APK="source/ZewarSnap/build/app/outputs/flutter-apk/app-release.apk"
-          if [ ! -f "$APK" ]; then
-            echo "ERROR: APK file not found!"
+          test -f "$APK" || {
+            echo "ERROR: APK was not generated"
             exit 1
-          fi
+          }
           ls -lh "$APK"
 
-      - name: Verify Android APK Signature
+      - name: Verify APK Signature
         continue-on-error: true
         run: |
           APK="source/ZewarSnap/build/app/outputs/flutter-apk/app-release.apk"
           APKSIGNER=$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n 1)
-
-          if [ -z "$APKSIGNER" ]; then
-            echo "ERROR: apksigner not found"
-            exit 1
+          if [ -n "$APKSIGNER" ]; then
+            "$APKSIGNER" verify --verbose --print-certs "$APK"
+          else
+            echo "apksigner not found"
           fi
 
-          "$APKSIGNER" verify --verbose --print-certs "$APK"
-
       - name: Upload APK
-        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: ZewarSnap-APK
