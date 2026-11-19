@@ -1,0 +1,47 @@
+
+name: ZewarSnap Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'ZewarSnap_Source_Project.zip'
+      - '.github/workflows/android-apk.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Extract Project
+        run: |
+          unzip -q ZewarSnap_Source_Project.zip -d source
+
+      - name: Install Dependencies
+        working-directory: source/ZewarSnap
+        run: flutter pub get
+
+      - name: Build APK
+        working-directory: source/ZewarSnap
+        run: flutter build apk --release
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ZewarSnap-APK
+          path: source/ZewarSnap/build/app/outputs/flutter-apk/app-release.apk
+          
